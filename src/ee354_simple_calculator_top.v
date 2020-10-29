@@ -31,7 +31,7 @@ An example verilog design for the ee201L students.
  Make sure to use the ee354_top.xdc file containing pin info.
                                                                                       
 */
-module divider_top      (   
+module simple_calculator_top      (   
         MemOE, MemWR, RamCS, QuadSpiFlashCS, // Disable the three memory chips
 
         ClkPort,                           // the 100 MHz incoming clock signal
@@ -67,14 +67,13 @@ module divider_top      (
     output  An4, An5, An6, An7; // extra four unused SSDs need to be turned off
     
     /*  LOCAL SIGNALS */
-    wire        Reset, ClkPort;
+    wire        Confirm, Clk, Reset;
     wire        board_clk;
     wire [2:0]  ssdscan_clk;
     
-    wire [7:0]  Xin, Yin;
-    reg  [7:0]  Quotient, Remainder;
-    wire        Start, Ack;
-    reg         Done, Qi, Qc, Qd;
+    wire [15:0] Input;
+    reg  [15:0] Flag;
+    reg         QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone;
 
 // to produce divided clock
     reg [26:0]  DIV_CLK;
@@ -84,80 +83,6 @@ module divider_top      (
     reg [7:0]   SSD_CATHODES;
 
 
-// Signals used to connect KCPSM6
-
-    wire [11:0] address;
-    wire [17:0] instruction;
-    wire        bram_enable;
-    reg  [7:0]  in_port;
-    wire [7:0]  out_port;
-    wire [7:0]  port_id;
-    wire        write_strobe;
-    wire        k_write_strobe;
-    wire        read_strobe;
-    reg         interrupt;   
-    wire        interrupt_ack;
-    wire        kcpsm6_sleep;  
-    wire        kcpsm6_reset;
-    wire        rdl;    
-    
-//------------  
-// Disable the two memories so that they do not interfere with the rest of the design.
-    assign {MemOE, MemWR, RamCS, QuadSpiFlashCS} = 4'b1111;
-    
-  /////////////////////////////////////////////////////////////////////////////////////////
-  // Instantiate KCPSM6 and connect to program ROM
-  /////////////////////////////////////////////////////////////////////////////////////////
-  //
-  // The generics can be defined as required. In this case the 'hwbuild' value is used to 
-  // define a version using the ASCII code for the desired letter and the interrupt vector
-  // has been set to 3C0 to provide 64 instructions for an Interrupt Service Routine (ISR)
-  // before reaching the end of a 1K memory 
-  //
-
-
-  kcpsm6 #(
-    .interrupt_vector   (12'h3FF),
-    .scratch_pad_memory_size(64),
-    .hwbuild        (8'h41))            // 41 hex is ASCII Character "A"
-  processor (
-    .address        (address),
-    .instruction    (instruction),
-    .bram_enable    (bram_enable),
-    .port_id        (port_id),
-    .write_strobe   (write_strobe),
-    .k_write_strobe (k_write_strobe),
-    .out_port       (out_port),
-    .read_strobe    (read_strobe),
-    .in_port        (in_port),
-    .interrupt      (interrupt),
-    .interrupt_ack  (interrupt_ack),
-    .reset          (kcpsm6_reset),
-    .sleep          (kcpsm6_sleep),
-    .clk            (board_clk)); 
-
-// Reset by press button (active Low) or JTAG Loader enabled Program Memory 
-
-    assign kcpsm6_reset = rdl | ( BtnC) ;   
-
-// Unused signals tied off until required.
-// Tying to other signals used to minimise warning messages.
- 
-//  assign kcpsm6_sleep = write_strobe & k_write_strobe;  // Always '0'
-    assign kcpsm6_sleep = 0;
-// Development Program Memory 
-//   JTAG Loader enabled for rapid code development. 
-  
-  prom_divider_v2 #(
-    .C_FAMILY          ("7S"),  
-    .C_RAM_SIZE_KWORDS  (1),  
-    .C_JTAG_LOADER_ENABLE   (1))
-    program_rom (
-    .rdl            (rdl),
-    .enable         (bram_enable),
-    .address        (address),
-    .instruction    (instruction),
-    .clk            (board_clk));  
 //------------
 // CLOCK DIVISION
 
@@ -169,12 +94,12 @@ module divider_top      (
     
     // Instantiation of BUFGP is an old practice. The implementation tools provide an appropriate Global Buffer automatically.
     // BUFGP BUFGP1 (board_clk, ClkPort);   
-    assign board_clk = ClkPort; 
+    assign board_clk = ClkPort;
 
-// As the ClkPort signal travels throughout our design,
-// it is necessary to provide global routing to this signal. 
-// The BUFGPs buffer these input ports and connect them to the global 
-// routing resources in the FPGA.
+    // As the ClkPort signal travels throughout our design,
+    // it is necessary to provide global routing to this signal. 
+    // The BUFGPs buffer these input ports and connect them to the global 
+    // routing resources in the FPGA.
 
     // BUFGP BUFGP2 (Reset, BtnC); In the case of Spartan 3E (on Nexys-2 board), we were using BUFGP to provide global routing for the reset signal. But Spartan 6 (on Nexys-3) does not allow this.
     assign Reset = BtnC;
@@ -182,7 +107,7 @@ module divider_top      (
     // Our clock is too fast (100MHz) for SSD scanning
     // create a series of slower "divided" clocks
     // each successive bit is 1/2 frequency
-  always @(posedge board_clk, posedge Reset)    
+    always @(posedge board_clk, posedge Reset)    
     begin                           
         if (Reset)
         DIV_CLK <= 0;
@@ -190,49 +115,14 @@ module divider_top      (
         DIV_CLK <= DIV_CLK + 1'b1;
     end
 
-    assign Xin = {Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8};
-    assign Yin = {Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0};
-    assign Start = BtnL; assign Ack = BtnR;
-    
-always @ (*)
-begin
-    if ((port_id[1] == 0) && (port_id[0] == 0))
-        in_port <= Xin;
-    else if ((port_id[1] == 0) && (port_id[0] == 1))
-        in_port <= {6'b000000,Start,Ack};
-    else if ((port_id[1] == 1) && (port_id[0] == 0))
-        in_port <= Yin;
-    else
-        in_port <= 8'bXXXXXXXX;
-end
+    assign Input = {Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0};
+    assign Confirm = BtnC;
+    assign Reset = BtnC;
 
-
-always @(posedge board_clk)     
-begin   
-    // 'write_strobe' is used to qualify all writes to general output ports using OUTPUT.
-    if (write_strobe == 1'b1) 
+    always @(posedge board_clk)     
     begin
-        if( (port_id[0] == 0) && (port_id[1] == 0) )
-            Quotient <= out_port;
-            
-        else if( (port_id[0] == 0) && (port_id[1] == 1) )
-            Remainder <= out_port;
-            
+
     end
-    
-    // 'k_write_strobe' is used to qualify all writes to general output ports using OUTPUTK.
-    if (k_write_strobe == 1'b1) 
-    begin
-        // Write to output_port at port address 01
-        if (port_id[0]  == 1'b1) 
-        begin
-            Done <= out_port[0];
-            Qi <= out_port[1];
-            Qc <= out_port[2];
-            Qd <= out_port[3];
-        end 
-    end     
-end
 
 //------------
 // OUTPUT: LEDS
@@ -292,16 +182,15 @@ end
     always @ (ssdscan_clk, SSD0, SSD1, SSD2, SSD3, SSD4, SSD5, SSD6, SSD7)
     begin : SSD_SCAN_OUT
         case (ssdscan_clk) 
-                  3'b000: SSD = SSD0;
-                  3'b001: SSD = SSD1;
-                  3'b010: SSD = SSD2;
-                  3'b011: SSD = SSD3;
-                  3'b100: SSD = SSD4;
-                  3'b101: SSD = SSD5;
-                  3'b110: SSD = SSD6;
-                  3'b111: SSD = SSD7;
-                  
-        endcase 
+            3'b000: SSD = SSD0;
+            3'b001: SSD = SSD1;
+            3'b010: SSD = SSD2;
+            3'b011: SSD = SSD3;
+            3'b100: SSD = SSD4;
+            3'b101: SSD = SSD5;
+            3'b110: SSD = SSD6;
+            3'b111: SSD = SSD7;
+        endcase
     end
 
     // Following is Hex-to-SSD conversion
