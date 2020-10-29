@@ -67,7 +67,7 @@ module simple_calculator_top      (
     output  An4, An5, An6, An7; // extra four unused SSDs need to be turned off
     
     /*  LOCAL SIGNALS */
-    wire        Clk, Reset;
+    wire        Reset;
     wire        board_clk;
     wire [2:0]  ssdscan_clk;
     wire [15:0] Input;
@@ -116,25 +116,24 @@ module simple_calculator_top      (
         DIV_CLK <= DIV_CLK + 1'b1;
     end
 
-    assign In = {Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0};
-    assign Clk = board_clk;
+    assign Input = {Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0};
     assign Reset = BtnC;
 
     ee354_debouncer #(.N_dc(28)) ee354_debouncer_up
-        (.CLK(sys_clk), .RESET(Reset), .PB(BtnU), .DPB( ),
+        (.CLK(board_clk), .RESET(Reset), .PB(BtnU), .DPB( ),
         .SCEN(BtnU_pulse), .MCEN( ), .CCEN( ));
     ee354_debouncer #(.N_dc(28)) ee354_debouncer_down
-        (.CLK(sys_clk), .RESET(Reset), .PB(BtnD), .DPB( ),
+        (.CLK(board_clk), .RESET(Reset), .PB(BtnD), .DPB( ),
         .SCEN(BtnD_pulse), .MCEN( ), .CCEN( ));
     ee354_debouncer #(.N_dc(28)) ee354_debouncer_left
-        (.CLK(sys_clk), .RESET(Reset), .PB(BtnL), .DPB( ),
+        (.CLK(board_clk), .RESET(Reset), .PB(BtnL), .DPB( ),
         .SCEN(BtnL_pulse), .MCEN( ), .CCEN( ));
     ee354_debouncer #(.N_dc(28)) ee354_debouncer_right
-        (.CLK(sys_clk), .RESET(Reset), .PB(BtnR), .DPB( ),
+        (.CLK(board_clk), .RESET(Reset), .PB(BtnR), .DPB( ),
         .SCEN(BtnR_pulse), .MCEN( ), .CCEN( ));
 
     simple_calculator #(.N_dc(28)) ee354_simple_calculator
-        (.In(Input), .Clk(Clk), .Reset(Reset), .Done(Done), .SCEN(), .ButU(BtnU_pulse), .ButD(BtnD_pulse),
+        (.In(Input), .Clk(board_clk), .Reset(Reset), .Done(Done), .SCEN(), .ButU(BtnU_pulse), .ButD(BtnD_pulse),
         .ButL(ButL_pulse), .ButR(BtnR_pulse), .C(C), .Flag(Flag), .QI(QI), .QGet_A(QGet_A),
         .QGet_B(QGet_B), .QGet_Op(QGet_Op), .QAdd(QAdd), .QSub(QSub), .QMul(QMul), .QDiv(QDiv),
         .QErr(QErr), .QDone(QDone));
