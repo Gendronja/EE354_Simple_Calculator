@@ -11,7 +11,7 @@ input Clk, Reset;
 output Done;
 input SCEN; //used as confirm
 input ButU, ButD, ButL, ButR;
-output [15:0] C;
+output [16:0] C;
 output Flag; //set to 1 if overflow in addition / multiplication / subtraction
 output QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone;
 
