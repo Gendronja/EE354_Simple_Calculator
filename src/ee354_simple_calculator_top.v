@@ -71,7 +71,7 @@ module simple_calculator_top      (
     wire        board_clk;
     wire [2:0]  ssdscan_clk;
     
-    wire [15:0] Input;
+    wire [15:0] In;
     reg  [15:0] Flag;
     reg         QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone;
 
@@ -115,7 +115,7 @@ module simple_calculator_top      (
         DIV_CLK <= DIV_CLK + 1'b1;
     end
 
-    assign Input = {Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0};
+    assign In = {Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0};
     assign Confirm = BtnC;
     assign Reset = BtnC;
 
