@@ -12,11 +12,11 @@ output Done;
 input SCEN; //used as confirm
 input ButU, ButD, ButL, ButR;
 output [15:0] C;
-output Flag; //set to 1 if overflow
+output Flag; //set to 1 if overflow in addition / multiplication / subtraction
 output QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone;
 
 
-reg [15:0] C; //remainder is dropped for division (could use this)
+reg [16:0] C; //remainder is dropped for division (could use this), C is one bit wider to check for overflow
 reg [15:0] A, B;
 reg [9:0] state;
 
@@ -77,32 +77,43 @@ begin: CU_and_DU
 			GET_OP:
 				begin
 				//state transitions
+				if(ButU) state <= MUL;             //TODO top: make sure only one of these gets sent at a time?
+				if(ButD && B != 0) state <= DIV;
+				if(ButD && B == 0) state <= ERR;
+				if(ButR) state <= ADD;
+				if(ButL) state <= SUB;
 
 				//data path
+				C <= 0;
 
 				end
 			ADD:
 				begin
 				//state transitions
+				state <= DONE; //set overflow in done state
 
 				//data path
+				C <= A + B;
 
 				end
 			SUB:
 				begin
 				//state transitions
+				state <= DONE;
 
 				//data path
+				C <= A - B;
+				if(A < B) Flag <= 1; //overflow
 
 				end
-			MUL:
+			MUL: //TODO: repetitive addition, need more registers / variables
 				begin
 				//state transitions
 
 				//data path
 
 				end
-			DIV:
+			DIV: //TODO: repetitive subtraction, need more registers / variables
 				begin
 				//state transitions
 
@@ -112,15 +123,16 @@ begin: CU_and_DU
 			ERR:
 				begin
 				//state transitions
-
-				//data path
+				if(SCEN) state <= INITIAL;
 
 				end
 			DONE:
 				begin
 				//state transitions
+				if(SCEN) state <= INITIAL;
 
 				//data path
+				if(C[16] == 1) Flag <= 1; //for addition case
 
 				end
 		end
