@@ -67,12 +67,13 @@ module simple_calculator_top      (
     output  An4, An5, An6, An7; // extra four unused SSDs need to be turned off
     
     /*  LOCAL SIGNALS */
-    wire        Confirm, Clk, Reset;
+    wire        Clk, Reset;
     wire        board_clk;
     wire [2:0]  ssdscan_clk;
-    
-    wire [15:0] In;
-    reg  [15:0] Flag;
+    wire [15:0] Input;
+    wire        BtnU_pulse, BtnD_pulse, BtnL_pulse, BtnR_pulse;
+    reg         Flag;
+    reg  [15:0] C;
     reg         QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone;
 
 // to produce divided clock
@@ -116,110 +117,25 @@ module simple_calculator_top      (
     end
 
     assign In = {Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0};
-    assign Confirm = BtnC;
+    assign Clk = board_clk;
     assign Reset = BtnC;
 
-    always @(posedge board_clk)     
-    begin
+    ee354_debouncer #(.N_dc(28)) ee354_debouncer_up
+        (.CLK(sys_clk), .RESET(Reset), .PB(BtnU), .DPB( ),
+        .SCEN(BtnU_pulse), .MCEN( ), .CCEN( ));
+    ee354_debouncer #(.N_dc(28)) ee354_debouncer_down
+        (.CLK(sys_clk), .RESET(Reset), .PB(BtnD), .DPB( ),
+        .SCEN(BtnD_pulse), .MCEN( ), .CCEN( ));
+    ee354_debouncer #(.N_dc(28)) ee354_debouncer_left
+        (.CLK(sys_clk), .RESET(Reset), .PB(BtnL), .DPB( ),
+        .SCEN(BtnL_pulse), .MCEN( ), .CCEN( ));
+    ee354_debouncer #(.N_dc(28)) ee354_debouncer_right
+        (.CLK(sys_clk), .RESET(Reset), .PB(BtnR), .DPB( ),
+        .SCEN(BtnR_pulse), .MCEN( ), .CCEN( ));
 
-    end
-
-//------------
-// OUTPUT: LEDS
-    
-    assign {Ld7, Ld6, Ld5, Ld4} = {Qi, Qc, Qd, Done};
-    assign {Ld3, Ld2, Ld1, Ld0} = {Start, BtnU, Ack, BtnD}; 
-    
-//------------
-// SSD (Seven Segment Display)
-    // reg [3:0]    SSD;
-    // wire [3:0]   SSD3, SSD2, SSD1, SSD0;
-    
-    //SSDs display Xin, Yin, Quotient, and Reminder  
-    assign SSD7 = Xin[7:4];
-    assign SSD6 = Xin[3:0];
-    assign SSD5 = Yin[7:4];
-    assign SSD4 = Yin[3:0];
-    assign SSD3 = Quotient[7:4];
-    assign SSD2 = Quotient[3:0];
-    assign SSD1 = Remainder[7:4];
-    assign SSD0 = Remainder[3:0];
-
-
-    // need a scan clk for the seven segment display 
-    
-    // 100 MHz / 2^18 = 381.5 cycles/sec ==> frequency of DIV_CLK[17]
-    // 100 MHz / 2^19 = 190.7 cycles/sec ==> frequency of DIV_CLK[18]
-    // 100 MHz / 2^20 =  95.4 cycles/sec ==> frequency of DIV_CLK[19]
-    
-    // 381.5 cycles/sec (2.62 ms per digit) [which means all 4 digits are lit once every 10.5 ms (reciprocal of 95.4 cycles/sec)] works well.
-    
-    //                  --|  |--|  |--|  |--|  |--|  |--|  |--|  |--|  |   
-    //                    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
-    //  DIV_CLK[17]       |__|  |__|  |__|  |__|  |__|  |__|  |__|  |__|
-    //
-    //               -----|     |-----|     |-----|     |-----|     |
-    //                    |  0  |  1  |  0  |  1  |     |     |     |     
-    //  DIV_CLK[18]       |_____|     |_____|     |_____|     |_____|
-    //
-    //         -----------|           |-----------|           |
-    //                    |  0     0  |  1     1  |           |           
-    //  DIV_CLK[19]       |___________|           |___________|
-    //
-
-    assign ssdscan_clk = DIV_CLK[19:17];
-    assign An0  = !(~(ssdscan_clk[2]) && ~(ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 000
-    assign An1  = !(~(ssdscan_clk[2]) && ~(ssdscan_clk[1]) && (ssdscan_clk[0]));  // when ssdscan_clk = 001
-    assign An2  = !(~(ssdscan_clk[2]) && (ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 010
-    assign An3  = !(~(ssdscan_clk[2]) && (ssdscan_clk[1]) && (ssdscan_clk[0]));  // when ssdscan_clk = 011
-    assign An4  = !((ssdscan_clk[2]) && ~(ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 100
-    assign An5  = !((ssdscan_clk[2]) && ~(ssdscan_clk[1]) && (ssdscan_clk[0]));  // when ssdscan_clk = 101
-    assign An6  = !((ssdscan_clk[2]) && (ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 110
-    assign An7  = !((ssdscan_clk[2]) && (ssdscan_clk[1]) && (ssdscan_clk[0]));  // when ssdscan_clk = 111
-    // Turn off another 4 anodes
-    
-    
-    always @ (ssdscan_clk, SSD0, SSD1, SSD2, SSD3, SSD4, SSD5, SSD6, SSD7)
-    begin : SSD_SCAN_OUT
-        case (ssdscan_clk) 
-            3'b000: SSD = SSD0;
-            3'b001: SSD = SSD1;
-            3'b010: SSD = SSD2;
-            3'b011: SSD = SSD3;
-            3'b100: SSD = SSD4;
-            3'b101: SSD = SSD5;
-            3'b110: SSD = SSD6;
-            3'b111: SSD = SSD7;
-        endcase
-    end
-
-    // Following is Hex-to-SSD conversion
-    always @ (SSD) 
-    begin : HEX_TO_SSD
-        case (SSD) // in this solution file the dot points are made to glow by making Dp = 0
-            //                                                                abcdefg,Dp
-            4'b0000: SSD_CATHODES = 8'b00000011; // 0
-            4'b0001: SSD_CATHODES = 8'b10011111; // 1
-            4'b0010: SSD_CATHODES = 8'b00100101; // 2
-            4'b0011: SSD_CATHODES = 8'b00001101; // 3
-            4'b0100: SSD_CATHODES = 8'b10011001; // 4
-            4'b0101: SSD_CATHODES = 8'b01001001; // 5
-            4'b0110: SSD_CATHODES = 8'b01000001; // 6
-            4'b0111: SSD_CATHODES = 8'b00011111; // 7
-            4'b1000: SSD_CATHODES = 8'b00000001; // 8
-            4'b1001: SSD_CATHODES = 8'b00001001; // 9
-            4'b1010: SSD_CATHODES = 8'b00010001; // A
-            4'b1011: SSD_CATHODES = 8'b11000001; // B
-            4'b1100: SSD_CATHODES = 8'b01100011; // C
-            4'b1101: SSD_CATHODES = 8'b10000101; // D
-            4'b1110: SSD_CATHODES = 8'b01100001; // E
-            4'b1111: SSD_CATHODES = 8'b01110001; // F    
-            default: SSD_CATHODES = 8'bXXXXXXXX; // default is not needed as we covered all cases
-        endcase
-    end 
-    
-    // reg [7:0]  SSD_CATHODES;
-    assign {Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp} = {SSD_CATHODES};
-    
-
+    simple_calculator #(.N_dc(28)) ee354_simple_calculator
+        (.In(Input), .Clk(Clk), .Reset(Reset), .Done(Done), .SCEN(), .ButU(BtnU_pulse), .ButD(BtnD_pulse),
+        .ButL(ButL_pulse), .ButR(BtnR_pulse), .C(C), .Flag(Flag), .QI(QI), .QGet_A(QGet_A),
+        .QGet_B(QGet_B), .QGet_Op(QGet_Op), .QAdd(QAdd), .QSub(QSub), .QMul(QMul), .QDiv(QDiv),
+        .QErr(QErr), .QDone(QDone));
 endmodule
