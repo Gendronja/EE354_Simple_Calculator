@@ -4,9 +4,9 @@
 // EE 354
 // --------------------------------
 
-module simple_calculator(Ain, Bin, Confirm, Clk, Reset, Done, SCEN, C, Flag, QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone);
+module simple_calculator(In, Confirm, Clk, Reset, Done, SCEN, C, Flag, QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone);
 
-input [15:0] Ain, Bin;
+input [15:0] In;
 input Confirm, Clk, Reset;
 output Done;
 input SCEN;
