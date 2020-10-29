@@ -4,12 +4,13 @@
 // EE 354
 // --------------------------------
 
-module simple_calculator(In, Confirm, Clk, Reset, Done, SCEN, C, Flag, QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone);
+module simple_calculator(In, Clk, Reset, Done, SCEN, ButU, ButD, ButL, ButR, C, Flag, QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone);
 
 input [15:0] In;
-input Confirm, Clk, Reset;
+input Clk, Reset;
 output Done;
-input SCEN;
+input SCEN; //used as confirm
+input ButU, ButD, ButL, ButR;
 output [15:0] C;
 output Flag; //set to 1 if overflow
 output QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone;
@@ -46,25 +47,31 @@ begin: CU_and_DU
 		begin
 		(* full_case, parallel_case *)
 		case(state)
-			INITIAL:
+			INITIAL: //press confirm to begin
 				begin
 				//state transitions
+				if(SCEN) state <= GET_A;
 
 				//data path
+				Flag <= 0;
 
 				end
 			GET_A:
 				begin
 				//state transitions
+				if(SCEN) state <= GET_B;
 
 				//data path
+				A <= In;
 
 				end
 			GET_B:
 				begin
 				//state transitions
+				if(SCEN) state <= GET_OP;
 
 				//data path
+				B <= In;
 
 				end
 			GET_OP:
