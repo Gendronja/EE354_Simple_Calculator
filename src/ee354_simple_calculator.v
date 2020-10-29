@@ -41,7 +41,7 @@ begin: CU_and_DU
 		state <= INITIAL;
 		A = 16'bXXXX_XXXX_XXXX_XXXX;
 		B = 16'bXXXX_XXXX_XXXX_XXXX;
-		C = 16'bXXXX_XXXX_XXXX_XXXX;
+		C = 17'bX_XXXX_XXXX_XXXX_XXXX;
 		end
 	else
 		begin
