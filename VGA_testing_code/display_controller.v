@@ -27,6 +27,7 @@ module display_controller(
 	output reg bright,
 	output reg[9:0] hCount, 
 	output reg [9:0] vCount, // Covers 800, width of the screen, because it's 2^10
+	output reg [15:0] A,B,C
 	);
 	
 	reg pulse;
@@ -35,7 +36,9 @@ module display_controller(
 	initial begin // Set all of them initially to 0
 		clk25 = 0;
 		pulse = 0;
-
+	    A <= 16'b1111100000000000;
+	    B <= 16'b0000000000011111;
+	    C <= 16'b0000001111100000;
 	end
 	
 	always @(posedge clk)
