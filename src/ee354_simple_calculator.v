@@ -20,6 +20,8 @@ reg [16:0] C; //remainder is dropped for division (could use this), C is one bit
 reg [15:0] A, B;
 reg [9:0] state;
 
+reg [15:0] temp; //to use for multiply / divide
+
 assign {QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone} = state;
 
 localparam
@@ -42,6 +44,7 @@ begin: CU_and_DU
 		A = 16'bXXXX_XXXX_XXXX_XXXX;
 		B = 16'bXXXX_XXXX_XXXX_XXXX;
 		C = 17'bX_XXXX_XXXX_XXXX_XXXX;
+		temp = 16'bXXXX_XXXX_XXXX_XXXX;
 		end
 	else
 		begin
@@ -77,7 +80,7 @@ begin: CU_and_DU
 			GET_OP:
 				begin
 				//state transitions
-				if(ButU) state <= MUL;             //TODO top: make sure only one of these gets sent at a time?
+				if(ButU) state <= MUL;
 				if(ButD && B != 0) state <= DIV;
 				if(ButD && B == 0) state <= ERR;
 				if(ButR) state <= ADD;
@@ -85,6 +88,7 @@ begin: CU_and_DU
 
 				//data path
 				C <= 0;
+				temp <= A; //for use in multiplication or division only
 
 				end
 			ADD:
@@ -109,15 +113,24 @@ begin: CU_and_DU
 			MUL: //TODO: repetitive addition, need more registers / variables
 				begin
 				//state transitions
+				if(temp == 16'b0000_0000_0000_0001) state <= DONE;
 
 				//data path
+				C <= C + B;
+				temp <= temp - 1;
+
+				if(C[16] == 1) Flag <= 1; //overflow
 
 				end
-			DIV: //TODO: repetitive subtraction, need more registers / variables
+			DIV:
 				begin
 				//state transitions
+				if(temp <= B) state <= DONE;
 
 				//data path
+				temp <= temp - B;
+				if(temp > B) C <= C + 1;
+				if(temp < B) F <= 1; //overflow not possible, so this means not divisible
 
 				end
 			ERR:
