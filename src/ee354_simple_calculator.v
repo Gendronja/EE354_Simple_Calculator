@@ -21,19 +21,20 @@ reg [15:0] A, B;
 reg [9:0] state;
 
 reg [15:0] temp; //to use for multiply / divide
+reg Flag;
 
 assign {QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone} = state;
 
 localparam
-INITIAL = 10'b0000000001;
-GET_A   = 10'b0000000010;
-GET_B   = 10'b0000000100;
-GET_OP  = 10'b0000001000;
-ADD     = 10'b0000010000;
-SUB     = 10'b0000100000;
-MUL     = 10'b0001000000;
-DIV     = 10'b0010000000;
-ERR     = 10'b0100000000;
+INITIAL = 10'b0000000001,
+GET_A   = 10'b0000000010,
+GET_B   = 10'b0000000100,
+GET_OP  = 10'b0000001000,
+ADD     = 10'b0000010000,
+SUB     = 10'b0000100000,
+MUL     = 10'b0001000000,
+DIV     = 10'b0010000000,
+ERR     = 10'b0100000000,
 DONE    = 10'b1000000000;
 
 always @ (posedge Clk, posedge Reset) 
@@ -130,7 +131,7 @@ begin: CU_and_DU
 				//data path
 				temp <= temp - B;
 				if(temp > B) C <= C + 1;
-				if(temp < B) F <= 1; //overflow not possible, so this means not divisible
+				if(temp < B) Flag <= 1; //overflow not possible, so this means not divisible
 
 				end
 			ERR:
@@ -148,6 +149,9 @@ begin: CU_and_DU
 				if(C[16] == 1) Flag <= 1; //for addition case
 
 				end
+			endcase
 		end
 
 end
+
+endmodule
