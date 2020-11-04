@@ -26,9 +26,9 @@ module display_controller(
 	output Hsync, Vsync,
 	output reg bright,
 	output reg[9:0] hCount, 
-	output reg [9:0] vCount, // Covers 800, width of the screen, because it's 2^10
+	output reg [9:0] vCount // Covers 800, width of the screen, because it's 2^10
 	);
-	
+
 	reg pulse;
 	reg clk25;
 	
