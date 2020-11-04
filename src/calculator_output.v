@@ -13,7 +13,7 @@ module calculator_output(
     
 	reg block_fill;
 	reg digit;
-	reg [9:0] arrayPos;
+	wire [9:0] arrayPos;
 	
 	//these two values dictate the center of the block, incrementing and decrementing them leads the block to move in certain directions
 	
@@ -49,14 +49,15 @@ module calculator_output(
 	begin: Number_Selection_From_Array
 		// Select array position based on horizontal position on VGA monitor
 		// Each digit location is 10x10 pixels (8x8 for digit, and 1 pixel on each side for spacing)
-			
+		
+/*		// Nasty way to calculate the array position for digit.
 		if ((vCount >= AVert) && (vCount <= DVert) && (hCount >= hStartPos) && (hCount <= hEndPos))
-	       arrayPos = ((((hCount % 100) - (hCount % 10)))/10 + (10*(hCount >= 300)));
+			arrayPos = ((((hCount % 100) - (hCount % 10)))/10 + (10*(hCount >= 300)));
 		
 		else
 			arrayPos = 0;
 			
-	
+*/	
 		if ((vCount >= AVert) && (vCount <= BVert))
 			digit = A[arrayPos];
 			
@@ -114,7 +115,7 @@ module calculator_output(
 			end	
 		
 		
-		// TODO: Fill out logic for writing a 0
+			// Logic for writing a 0
 		    else if (digit == 0)
 		    begin
 			    case (hCount % 10)
@@ -123,28 +124,56 @@ module calculator_output(
 				    block_fill <= 0;
 			
 			    10'd1:
-				    block_fill <= 1;
+					if ((vCount % 10 == 3) || (vCount % 10 == 4) || (vCount % 10 == 5) || (vCount % 10 == 6))
+						block_fill <= 1;
+					else
+						block_fill <= 0;
 			
 			    10'd2:
-				    block_fill <= 1;
+					if ((vCount % 10 == 3) || (vCount % 10 == 4) || (vCount % 10 == 5) || (vCount % 10 == 6))
+						block_fill <= 1;
+					else
+						block_fill <= 0;
 				
 			    10'd3:
-				    block_fill <= 0;
+					if ((vCount % 10 == 3) || (vCount % 10 == 4) || (vCount % 10 == 5) || (vCount % 10 == 6))
+						block_fill <= 1;
+						
+					else
+						block_fill <= 0;
 				
 			    10'd4:
-				    block_fill <= 0;
+					if ((vCount % 10 == 3) || (vCount % 10 == 4) || (vCount % 10 == 5) || (vCount % 10 == 6))
+						block_fill <= 1;
+						
+					else
+						block_fill <= 0;
 			
 			    10'd5:
-				    block_fill <= 0;
+					if ((vCount % 10 == 3) || (vCount % 10 == 4) || (vCount % 10 == 5) || (vCount % 10 == 6))
+						block_fill <= 1;
+						
+					else
+						block_fill <= 0;
 			
 			    10'd6:
-				    block_fill <= 0;
+					if ((vCount % 10 == 3) || (vCount % 10 == 4) || (vCount % 10 == 5) || (vCount % 10 == 6))
+						block_fill <= 1;
+						
+					else
+						block_fill <= 0;
 			
 			    10'd7:
-				    block_fill <= 1;
+					if ((vCount % 10 == 3) || (vCount % 10 == 4) || (vCount % 10 == 5) || (vCount % 10 == 6))
+						block_fill <= 1;
+					else
+						block_fill <= 0;
 				
 			    10'd8:
-				    block_fill <= 1;
+					if ((vCount % 10 == 3) || (vCount % 10 == 4) || (vCount % 10 == 5) || (vCount % 10 == 6))
+						block_fill <= 1;
+					else
+						block_fill <= 0;
 			
 			    10'd9:
 				    block_fill <= 0;
@@ -154,10 +183,15 @@ module calculator_output(
 		else
 		    block_fill <= 0;
 	end
-						
+	
+	
+	// Check if hCount and vCount within the A, B, or C blocks
 	assign Ablock = ((hCount >= hStartPos) && (hCount <= hEndPos)) && ((vCount >= AVert) && (vCount <= (AVert + 10)));
 	assign Bblock = ((hCount >= hStartPos) && (hCount <= hEndPos)) && ((vCount >= BVert) && (vCount <= (BVert + 10)));
 	assign Cblock = ((hCount >= hStartPos) && (hCount <= hEndPos)) && ((vCount >= CVert) && (vCount <= (CVert + 10)));
+	// Pick array value based on hCount and vCount, only usable in specific A, B, C blocks. Assign 0 if outside of blocks
+	assign arrayPos = ((vCount >= AVert) && (vCount <= DVert) && (hCount >= hStartPos) && (hCount <= hEndPos)) ? 
+					  ((((hCount % 100) - (hCount % 10)))/10 + (10*(hCount >= 300))) : 0;
 	//assign col = (hCount % 10);
 	//assign row = (vCount % 10);
 	//assign textBlock = ((vCount >= AVert) && (vCount <= BVert) && (hCount >= 250) && (hCount <= 400));
