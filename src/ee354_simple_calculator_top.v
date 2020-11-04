@@ -36,6 +36,10 @@ module simple_calculator_top      (
 
         ClkPort,                           // the 100 MHz incoming clock signal
         
+		// VGA signals:
+		Hsync, Vsync,
+		vgaRed, vgaGreen, vgaBlue,
+		
         BtnL, BtnU, BtnD, BtnR,            // the Left, Up, Down, and the Right buttons         BtnL, BtnR,
         BtnC,                              // the center button (this is our reset in most of our designs)
         Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0, // 16 switches
@@ -43,7 +47,8 @@ module simple_calculator_top      (
         An3, An2, An1, An0,                // 4 anodes
         An7, An6, An5, An4,                // another 4 anodes (we need to turn these unused SSDs off)
         Ca, Cb, Cc, Cd, Ce, Cf, Cg,        // 7 cathodes
-        Dp                                 // Dot Point Cathode on SSDs
+        Dp,                                // Dot Point Cathode on SSDs
+		MemOE, MemWR, RamCS, QuadSpiFlashCS
       );
      
                                 
@@ -58,6 +63,11 @@ module simple_calculator_top      (
     /*  OUTPUTS */
     // Control signals on Memory chips  (to disable them)
     output  MemOE, MemWR, RamCS, QuadSpiFlashCS;
+	// VGA signals
+	output Hsync, Vsync;
+	output [3:0] vgaRed, vgaGreen, vgaBlue;
+	wire[9:0] hc, vc;
+	
     // Project Specific Outputs
     // LEDs
     output  Ld0, Ld1, Ld2, Ld3, Ld4, Ld5, Ld6, Ld7;
@@ -75,6 +85,7 @@ module simple_calculator_top      (
     reg         Flag;
     reg  [15:0] C;
     reg         QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone;
+	wire [11:0] rgb;
 
 // to produce divided clock
     reg [26:0]  DIV_CLK;
@@ -118,6 +129,13 @@ module simple_calculator_top      (
 
     assign Input = {Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0};
     assign Reset = BtnC;
+	// Assign VGA values from rgb
+	assign vgaRed = rgb[11 : 8];
+	assign vgaGreen = rgb[7  : 4];
+	assign vgaBlue = rgb[3  : 0];
+	
+	// disable mamory ports
+	assign {MemOE, MemWR, RamCS, QuadSpiFlashCS} = 4'b1111;
 
     ee354_debouncer #(.N_dc(28)) ee354_debouncer_up
         (.CLK(board_clk), .RESET(Reset), .PB(BtnU), .DPB( ),
@@ -131,6 +149,9 @@ module simple_calculator_top      (
     ee354_debouncer #(.N_dc(28)) ee354_debouncer_right
         (.CLK(board_clk), .RESET(Reset), .PB(BtnR), .DPB( ),
         .SCEN(BtnR_pulse), .MCEN( ), .CCEN( ));
+		
+	display_controller dc(.clk(ClkPort), .Hsync(Hsync), .Vsync(Vsync), .bright(bright), .hCount(hc), .vCount(vc), .A(A), .B(B), .C(C));
+	calculator_output sc(.clk(ClkPort), .bright(bright), .rst(BtnC), .hCount(hc), .vCount(vc), .rgb(rgb), .A(A), .B(B), .C(C));	
 
     simple_calculator #(.N_dc(28)) ee354_simple_calculator
         (.In(Input), .Clk(board_clk), .Reset(Reset), .Done(Done), .SCEN(), .ButU(BtnU_pulse), .ButD(BtnD_pulse),
