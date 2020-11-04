@@ -48,7 +48,6 @@ module simple_calculator_top      (
         An7, An6, An5, An4,                // another 4 anodes (we need to turn these unused SSDs off)
         Ca, Cb, Cc, Cd, Ce, Cf, Cg,        // 7 cathodes
         Dp,                                // Dot Point Cathode on SSDs
-		MemOE, MemWR, RamCS, QuadSpiFlashCS
       );
      
                                 
@@ -82,9 +81,9 @@ module simple_calculator_top      (
     wire [2:0]  ssdscan_clk;
     wire [15:0] Input;
     wire        BtnU_pulse, BtnD_pulse, BtnL_pulse, BtnR_pulse;
-    reg         Flag;
-    reg  [15:0] C;
-    reg         QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone;
+    wire        Flag;
+    wire [15:0] C;
+    wire        QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone;
 	wire [11:0] rgb;
 
 // to produce divided clock
@@ -150,10 +149,10 @@ module simple_calculator_top      (
         (.CLK(board_clk), .RESET(Reset), .PB(BtnR), .DPB( ),
         .SCEN(BtnR_pulse), .MCEN( ), .CCEN( ));
 		
-	display_controller dc(.clk(ClkPort), .Hsync(Hsync), .Vsync(Vsync), .bright(bright), .hCount(hc), .vCount(vc), .A(A), .B(B), .C(C));
+	display_controller dc(.clk(ClkPort), .Hsync(Hsync), .Vsync(Vsync), .bright(bright), .hCount(hc), .vCount(vc));
 	calculator_output sc(.clk(ClkPort), .bright(bright), .rst(BtnC), .hCount(hc), .vCount(vc), .rgb(rgb), .A(A), .B(B), .C(C));	
 
-    simple_calculator #(.N_dc(28)) ee354_simple_calculator
+    simple_calculator ee354_simple_calculator
         (.In(Input), .Clk(board_clk), .Reset(Reset), .Done(Done), .SCEN(), .ButU(BtnU_pulse), .ButD(BtnD_pulse),
         .ButL(ButL_pulse), .ButR(BtnR_pulse), .C(C), .Flag(Flag), .QI(QI), .QGet_A(QGet_A),
         .QGet_B(QGet_B), .QGet_Op(QGet_Op), .QAdd(QAdd), .QSub(QSub), .QMul(QMul), .QDiv(QDiv),
