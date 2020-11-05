@@ -14,7 +14,7 @@ module simple_calculator_top (
         BtnL, BtnU, BtnD, BtnR,            // the Left, Up, Down, and the Right buttons         BtnL, BtnR,
         BtnC,                              // the center button (this is our reset in most of our designs)
         Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0, // 16 switches
-        Ld7, Ld6, Ld5, Ld4, Ld3, Ld2, Ld1, Ld0, // 8 LEDs
+        Ld12, Ld11, Ld10, Ld9, Ld8, Ld7, Ld6, Ld5, Ld4, Ld3, Ld2, Ld1, Ld0, // 8 LEDs
         An3, An2, An1, An0,                // 4 anodes
         An7, An6, An5, An4,                // another 4 anodes (we need to turn these unused SSDs off)
         Ca, Cb, Cc, Cd, Ce, Cf, Cg,        // 7 cathodes
@@ -40,7 +40,7 @@ module simple_calculator_top (
 	
     // Project Specific Outputs
     // LEDs
-    output  Ld0, Ld1, Ld2, Ld3, Ld4, Ld5, Ld6, Ld7;
+    output  Ld0, Ld1, Ld2, Ld3, Ld4, Ld5, Ld6, Ld7, Ld8, Ld9, Ld10, Ld11, Ld12;
     // SSD Outputs
     output  Cg, Cf, Ce, Cd, Cc, Cb, Ca, Dp;
     output  An0, An1, An2, An3; 
