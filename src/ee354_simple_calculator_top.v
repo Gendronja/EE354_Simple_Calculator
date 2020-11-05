@@ -47,7 +47,7 @@ module simple_calculator_top (
     output  An4, An5, An6, An7; // extra four unused SSDs need to be turned off
     
     /*  LOCAL SIGNALS */
-    wire        Reset;
+    wire        Reset = 0;
     wire        board_clk;
     wire [2:0]  ssdscan_clk;
     wire [15:0] Input;
@@ -84,8 +84,6 @@ module simple_calculator_top (
     // The BUFGPs buffer these input ports and connect them to the global 
     // routing resources in the FPGA.
 
-    // BUFGP BUFGP2 (Reset, BtnC); In the case of Spartan 3E (on Nexys-2 board), we were using BUFGP to provide global routing for the reset signal. But Spartan 6 (on Nexys-3) does not allow this.
-    assign Reset = BtnC;
 //------------
     // Our clock is too fast (100MHz) for SSD scanning
     // create a series of slower "divided" clocks
