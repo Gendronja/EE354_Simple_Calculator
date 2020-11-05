@@ -27,4 +27,4 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Build with Iverilog
-        run: iverilog -c file_list.txt
+        run: iverilog -Wall -c file_list.txt
