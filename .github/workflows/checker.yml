@@ -27,4 +27,4 @@ jobs:
 
       # Runs a set of commands using the runners shell
       - name: Build with Iverilog
-        run: cd src/ && iverilog -l calculator_output.v -l display_controller.v -l ee354_debounce_DPB_SCEN_CCEN_MCEN_r1.v -l ee354_simple_calculator.v -s simple_calculator_top ee354_simple_calculator_top.v
+        run: iverilog -L src -s simple_calculator_top src/ee354_simple_calculator_top.v
