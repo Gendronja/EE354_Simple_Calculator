@@ -6,6 +6,7 @@ module calculator_output(
 	input rst,
 	input [9:0] hCount, vCount,
 	input [15:0] A, B, C,
+	input flag,            // Error or overflow state flag
 	output reg [11:0] rgb
    );
     
@@ -16,17 +17,13 @@ module calculator_output(
 	wire [9:0] arrayPos;
 	wire [3:0] row, col;
 	
-	//these two values dictate the center of the block, incrementing and decrementing them leads the block to move in certain directions
-	
-	parameter BLK   = 12'b0000_0000_0000;			// Black
-	parameter background = 12'b1111_1111_1111;		// White
-	
+	parameter BLK   = 12'b0000_0000_0000;			// Black text
+	reg [11:0] background; // White normally or light red if in error state
 	
 	// Start positions for A, B, and C fields on VGA
 	parameter AVert = 10'd100;
 	parameter BVert = 10'd150;
 	parameter CVert = 10'd200;
-	parameter DVert = 10'd210;
 	
 	// Horizontal start position for each block of text
 	parameter hStartPos = 10'd200;
@@ -38,7 +35,7 @@ module calculator_output(
 	will output some data to every pixel and not just the images you are trying to display*/
 	always@ (*) begin
     	if(~bright )	//force black if not inside the display area
-			rgb = 12'b0000_0000_0000;
+			rgb = BLK;
 		else if (block_fill == 1)
 			rgb = BLK; 
 		else	
@@ -51,21 +48,13 @@ module calculator_output(
 		// Select array position based on horizontal position on VGA monitor
 		// Each digit location is 10x10 pixels (8x8 for digit, and 1 pixel on each side for spacing)
 		
-/*		// Nasty way to calculate the array position for digit.
-		if ((vCount >= AVert) && (vCount <= DVert) && (hCount >= hStartPos) && (hCount <= hEndPos))
-			arrayPos = ((((hCount % 100) - (hCount % 10)))/10 + (10*(hCount >= 300)));
-		
-		else
-			arrayPos = 0;
-			
-*/	
 		if ((vCount >= AVert) && (vCount <= BVert))
 			digit = A[arrayPos];
 			
 		else if ((vCount >= BVert) && (vCount <= CVert))
 			digit = B[arrayPos];
 			
-		else if ((vCount >= CVert) && (vCount <= DVert))
+		else if ((vCount >= CVert) && (vCount <= CVert + 10))
 			digit = C[arrayPos];
 		
 		else
@@ -193,13 +182,20 @@ module calculator_output(
 	assign Bblock = ((hCount >= hStartPos) && (hCount <= hEndPos)) && ((vCount >= BVert) && (vCount <= (BVert + 10)));
 	assign Cblock = ((hCount >= hStartPos) && (hCount <= hEndPos)) && ((vCount >= CVert) && (vCount <= (CVert + 10)));
 	// Pick array value based on hCount and vCount, only usable in specific A, B, C blocks. Assign 0 if outside of blocks
-	assign arrayPos = ((vCount >= AVert) && (vCount <= DVert) && (hCount >= hStartPos) && (hCount <= hEndPos)) ? 
+	assign arrayPos = ((vCount >= AVert) && (vCount <= CVert + 10) && (hCount >= hStartPos) && (hCount <= hEndPos)) ? 
 					  ((((hCount % 100) - (hCount % 10)))/10 + (10*(hCount >= 300))) : 0;
 					  
 	assign col = (hCount % 10);
 	assign row = (vCount % 10);
-	//assign textBlock = ((vCount >= AVert) && (vCount <= BVert) && (hCount >= 250) && (hCount <= 400));
-	//assign block_fill = ((digit == 1)&&(  ) ? ((vCount % 10) ) : ( )
+	
+		always@(*) 
+		begin
+			if(flag == 1)
+				background <= 12'b1111_0000_0000; // Light red on error code
+			else 
+				background <= 12'b1111_1111_1111;	// White normally			
+		end
+	
 	
 	
 	 /*
