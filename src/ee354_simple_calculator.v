@@ -58,6 +58,11 @@ begin: CU_and_DU
 				if(SCEN) state <= GET_A;
 
 				//data path
+				A <= 0;
+				B <= 0;
+				C <= 0;
+				temp <= 0;
+
 				Flag <= 0;
 
 				end
@@ -139,6 +144,11 @@ begin: CU_and_DU
 				begin
 				//state transitions
 				if(SCEN) state <= INITIAL;
+
+				A <= 0;
+				B <= 0;
+				C <= 0;
+				F <= 1;
 
 				end
 			DONE:
