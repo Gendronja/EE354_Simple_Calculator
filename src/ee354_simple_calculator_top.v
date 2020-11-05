@@ -5,41 +5,13 @@ Revision  : 1.1, 2.0 (Nexys-3), 3.0 (Nexys-4)
 Date : Feb 15, 2008, 10/14/08, 2/12/2012, 10/3/2020
 */
 
-/*
-A verlog top module for the 4-bit division by repetitive subtraction.
-An example verilog design for the ee201L students.
-
- The program does the following:
- 
- We set the 4-bit dividend (Xin) and the 4-bit divisor (Yin) 
- on Sw7-Sw4 and Sw3-Sw0 respectively. 
- The BtnL (Btn Left) is our Start button and BtnR (Btn Right) is our Ack button.
- The Ld3, Ld2, Ld1, Ld0 glow when BtnL, BtnU, BtnR, BtnD  are pressed respectively.
- The Ld4 glows when the Done signal is activated by the divider.
- Ld7, Ld6, Ld5 represent Initial (QI), Compute (QC) and Done (QD) states.
- The BtnC (the center button) on the Nexys 3 or Nexys 4 boards acts as the Reset button in this design.
- The right 4 digits (SSDs) from left to right display, the dividend, the divisor,
- the quotient, and the remainder.
- 
- We did not add debouncing circuitry, nor single stepping circuitry
- in this rather simple-minded design. 
- Since we have a separate START button (BtnL) and a separate ACK button (BtnR), 
- the bouncing of these buttons does not affect the operation of the divider.
-
-*/
-/*
- Make sure to use the ee354_top.xdc file containing pin info.
-                                                                                      
-*/
-module simple_calculator_top      (   
+module simple_calculator_top (   
         MemOE, MemWR, RamCS, QuadSpiFlashCS, // Disable the three memory chips
-
         ClkPort,                           // the 100 MHz incoming clock signal
-        
 		// VGA signals:
 		Hsync, Vsync,
 		vgaRed, vgaGreen, vgaBlue,
-		
+        // Control signals
         BtnL, BtnU, BtnD, BtnR,            // the Left, Up, Down, and the Right buttons         BtnL, BtnR,
         BtnC,                              // the center button (this is our reset in most of our designs)
         Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0, // 16 switches
@@ -48,7 +20,7 @@ module simple_calculator_top      (
         An7, An6, An5, An4,                // another 4 anodes (we need to turn these unused SSDs off)
         Ca, Cb, Cc, Cd, Ce, Cf, Cg,        // 7 cathodes
         Dp,                                // Dot Point Cathode on SSDs
-      );
+    );
      
                                 
     /*  INPUTS */
@@ -157,4 +129,7 @@ module simple_calculator_top      (
         .ButL(ButL_pulse), .ButR(BtnR_pulse), .C(C), .Flag(Flag), .QI(QI), .QGet_A(QGet_A),
         .QGet_B(QGet_B), .QGet_Op(QGet_Op), .QAdd(QAdd), .QSub(QSub), .QMul(QMul), .QDiv(QDiv),
         .QErr(QErr), .QDone(QDone));
+
+    assign {Ld12, Ld11, d10, Ld9, Ld8, Ld7, Ld6, Ld5, Ld4} = {QDone, QErr, QDiv, QMul, QSub, QAdd, QGet_Op, QGet_B, QGet_A}; 
+    assign {Ld3, Ld2, Ld1, Ld0} = {BtnU, BtnD, BtnL, BtnR}; 
 endmodule
