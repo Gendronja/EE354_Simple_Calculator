@@ -119,11 +119,11 @@ module simple_calculator_top (
         (.CLK(board_clk), .RESET(Reset), .PB(BtnR), .DPB( ),
         .SCEN(BtnR_pulse), .MCEN( ), .CCEN( ));
     ee354_debouncer #(.N_dc(28)) ee354_debouncer_center
-        (.CLK(board_clk), .RESET(Reset), .PB(BtnR), .DPB( ),
+        (.CLK(board_clk), .RESET(Reset), .PB(BtnC), .DPB( ),
         .SCEN(BtnC_pulse), .MCEN( ), .CCEN( ));
 		
 	display_controller dc(.clk(ClkPort), .Hsync(Hsync), .Vsync(Vsync), .bright(bright), .hCount(hc), .vCount(vc));
-	calculator_output sc(.clk(ClkPort), .bright(bright), .rst(BtnC), .hCount(hc), .vCount(vc), .rgb(rgb), .A(A), .B(B), .C(C));	
+	calculator_output sc(.clk(ClkPort), .bright(bright), .hCount(hc), .vCount(vc), .rgb(rgb), .A(A), .B(B), .C(C));	
 
     simple_calculator ee354_simple_calculator
         (.In(Input), .Clk(board_clk), .Reset(Reset), .Done(Done), .SCEN(BtnC_pulse), .ButU(BtnU_pulse), .ButD(BtnD_pulse),
