@@ -148,7 +148,7 @@ begin: CU_and_DU
 				A <= 0;
 				B <= 0;
 				C <= 0;
-				F <= 1;
+				Flag <= 1;
 
 				end
 			DONE:
