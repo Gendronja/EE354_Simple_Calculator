@@ -1,0 +1,4 @@
+src/calculator_output.v
+src/display_controller.v
+src/ee354_simple_calculator.v
+src/ee354_simple_calculator_top.v
