@@ -97,7 +97,7 @@ module simple_calculator_top (
     end
 
     assign Input = {Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0};
-    assign Reset = BtnC;
+    assign Reset = 0;
 	// Assign VGA values from rgb
 	assign vgaRed = rgb[11 : 8];
 	assign vgaGreen = rgb[7  : 4];
