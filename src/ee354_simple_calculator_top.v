@@ -133,7 +133,7 @@ module simple_calculator_top (
 
     //------------
     // OUTPUT: LEDS
-    assign {Ld12, Ld11, d10, Ld9, Ld8, Ld7, Ld6, Ld5, Ld4} = {QDone, QErr, QDiv, QMul, QSub, QAdd, QGet_Op, QGet_B, QGet_A}; 
+    assign {Ld13, Ld12, Ld11, d10, Ld9, Ld8, Ld7, Ld6, Ld5, Ld4} = {QI, QDone, QErr, QDiv, QMul, QSub, QAdd, QGet_Op, QGet_B, QGet_A}; 
     assign {Ld3, Ld2, Ld1, Ld0} = {BtnU, BtnD, BtnL, BtnR};
 
     //------------
