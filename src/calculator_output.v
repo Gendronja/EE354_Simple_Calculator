@@ -4,6 +4,7 @@ module calculator_output(
 	input clk,             // Sys clk, display_controller.v handles vga sync
 	input bright,
 	input [9:0] hCount, vCount,
+	input rst,
 	input [15:0] A, B, C,
 	input flag,            // Error or overflow state flag
 	output reg [11:0] rgb
