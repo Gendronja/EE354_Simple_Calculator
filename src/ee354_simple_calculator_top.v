@@ -1,13 +1,12 @@
-/*
-File     : divider_top.v 
-Author   : Gandhi Puvvada
-Revision  : 1.1, 2.0 (Nexys-3), 3.0 (Nexys-4)
-Date : Feb 15, 2008, 10/14/08, 2/12/2012, 10/3/2020
-*/
+// --------------------------------
+// Simple Calculator
+// Jason Yik, Haoda Wang, Jason Gendron
+// EE 354
+// --------------------------------
 
 module simple_calculator_top (   
         MemOE, MemWR, RamCS, QuadSpiFlashCS, // Disable the three memory chips
-        ClkPort,                           // the 100 MHz incoming clock signal
+        ClkPort,                             // the 100 MHz incoming clock signal
 		// VGA signals:
 		Hsync, Vsync,
 		vgaRed, vgaGreen, vgaBlue,
@@ -52,7 +51,7 @@ module simple_calculator_top (
     wire        board_clk;
     wire [2:0]  ssdscan_clk;
     wire [15:0] Input;
-    wire        BtnU_pulse, BtnD_pulse, BtnL_pulse, BtnR_pulse;
+    wire        BtnU_pulse, BtnD_pulse, BtnL_pulse, BtnR_pulse, BtnC_pulse;
     wire        Flag;
     wire [15:0] A, B;
     wire [16:0] C;
@@ -121,12 +120,15 @@ module simple_calculator_top (
     ee354_debouncer #(.N_dc(28)) ee354_debouncer_right
         (.CLK(board_clk), .RESET(Reset), .PB(BtnR), .DPB( ),
         .SCEN(BtnR_pulse), .MCEN( ), .CCEN( ));
+    ee354_debouncer #(.N_dc(28)) ee354_debouncer_center
+        (.CLK(board_clk), .RESET(Reset), .PB(BtnR), .DPB( ),
+        .SCEN(BtnC_pulse), .MCEN( ), .CCEN( ));
 		
 	display_controller dc(.clk(ClkPort), .Hsync(Hsync), .Vsync(Vsync), .bright(bright), .hCount(hc), .vCount(vc));
 	calculator_output sc(.clk(ClkPort), .bright(bright), .rst(BtnC), .hCount(hc), .vCount(vc), .rgb(rgb), .A(A), .B(B), .C(C));	
 
     simple_calculator ee354_simple_calculator
-        (.In(Input), .Clk(board_clk), .Reset(Reset), .Done(Done), .SCEN(), .ButU(BtnU_pulse), .ButD(BtnD_pulse),
+        (.In(Input), .Clk(board_clk), .Reset(Reset), .Done(Done), .SCEN(BtnC_pulse), .ButU(BtnU_pulse), .ButD(BtnD_pulse),
         .ButL(ButL_pulse), .ButR(BtnR_pulse), .A(A), .B(B), .C(C), .Flag(Flag), .QI(QI), .QGet_A(QGet_A),
         .QGet_B(QGet_B), .QGet_Op(QGet_Op), .QAdd(QAdd), .QSub(QSub), .QMul(QMul), .QDiv(QDiv),
         .QErr(QErr), .QDone(QDone));
