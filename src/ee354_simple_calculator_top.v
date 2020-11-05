@@ -123,7 +123,7 @@ module simple_calculator_top (
         .SCEN(BtnC_pulse), .MCEN( ), .CCEN( ));
 		
 	display_controller dc(.clk(ClkPort), .Hsync(Hsync), .Vsync(Vsync), .bright(bright), .hCount(hc), .vCount(vc));
-	calculator_output sc(.clk(ClkPort), .bright(bright), .hCount(hc), .vCount(vc), .rgb(rgb), .A(A), .B(B), .C(C));	
+	calculator_output sc(.clk(ClkPort), .bright(bright), .hCount(hc), .vCount(vc), .rgb(rgb), .A(A), .B(B), .C(C), .flag(Flag));	
 
     simple_calculator ee354_simple_calculator
         (.In(Input), .Clk(board_clk), .Reset(Reset), .Done(Done), .SCEN(BtnC_pulse), .ButU(BtnU_pulse), .ButD(BtnD_pulse),

@@ -24,7 +24,7 @@ reg [9:0] state;
 reg [15:0] temp; //to use for multiply / divide
 reg Flag;
 
-assign {QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone} = state;
+assign {QDone, QErr, QDiv, QMul, QSub, QAdd, QGet_Op, QGet_B, QGet_A, QI} = state;
 
 localparam
 INITIAL = 10'b0000000001,
