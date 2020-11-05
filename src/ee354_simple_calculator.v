@@ -4,13 +4,14 @@
 // EE 354
 // --------------------------------
 
-module simple_calculator(In, Clk, Reset, Done, SCEN, ButU, ButD, ButL, ButR, C, Flag, QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone);
+module simple_calculator(In, Clk, Reset, Done, SCEN, ButU, ButD, ButL, ButR, A, B, C, Flag, QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone);
 
 input [15:0] In;
 input Clk, Reset;
 output Done;
 input SCEN; //used as confirm
 input ButU, ButD, ButL, ButR;
+output [15:0] A, B;
 output [16:0] C;
 output Flag; //set to 1 if overflow in addition / multiplication / subtraction
 output QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone;

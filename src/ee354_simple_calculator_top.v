@@ -54,16 +54,17 @@ module simple_calculator_top (
     wire [15:0] Input;
     wire        BtnU_pulse, BtnD_pulse, BtnL_pulse, BtnR_pulse;
     wire        Flag;
-    wire [15:0] C;
+    wire [15:0] A, B;
+    wire [16:0] C;
     wire        QI, QGet_A, QGet_B, QGet_Op, QAdd, QSub, QMul, QDiv, QErr, QDone;
 	wire [11:0] rgb;
 
-// to produce divided clock
-    reg [26:0]  DIV_CLK;
-// SSD (Seven Segment Display)
-    reg [3:0]   SSD;
+    // to produce divided clock
+    reg  [26:0]  DIV_CLK;
+    // SSD (Seven Segment Display)
+    reg  [3:0]  SSD;
     wire [3:0]  SSD7, SSD6, SSD5, SSD4, SSD3, SSD2, SSD1, SSD0;
-    reg [7:0]   SSD_CATHODES;
+    reg  [7:0]  SSD_CATHODES;
 
 
 //------------
@@ -126,10 +127,105 @@ module simple_calculator_top (
 
     simple_calculator ee354_simple_calculator
         (.In(Input), .Clk(board_clk), .Reset(Reset), .Done(Done), .SCEN(), .ButU(BtnU_pulse), .ButD(BtnD_pulse),
-        .ButL(ButL_pulse), .ButR(BtnR_pulse), .C(C), .Flag(Flag), .QI(QI), .QGet_A(QGet_A),
+        .ButL(ButL_pulse), .ButR(BtnR_pulse), .A(A), .B(B), .C(C), .Flag(Flag), .QI(QI), .QGet_A(QGet_A),
         .QGet_B(QGet_B), .QGet_Op(QGet_Op), .QAdd(QAdd), .QSub(QSub), .QMul(QMul), .QDiv(QDiv),
         .QErr(QErr), .QDone(QDone));
 
+    //------------
+    // OUTPUT: LEDS
     assign {Ld12, Ld11, d10, Ld9, Ld8, Ld7, Ld6, Ld5, Ld4} = {QDone, QErr, QDiv, QMul, QSub, QAdd, QGet_Op, QGet_B, QGet_A}; 
-    assign {Ld3, Ld2, Ld1, Ld0} = {BtnU, BtnD, BtnL, BtnR}; 
+    assign {Ld3, Ld2, Ld1, Ld0} = {BtnU, BtnD, BtnL, BtnR};
+
+    //------------
+    // SSD (Seven Segment Display)
+    // reg [3:0]    SSD;
+    // wire [3:0]   SSD3, SSD2, SSD1, SSD0;
+    
+    //SSDs display Xin, Yin, Quotient, and Reminder  
+    assign SSD7 = A[15:12];
+    assign SSD6 = A[11:8];
+    assign SSD5 = A[7:4];
+    assign SSD4 = A[3:0];
+    assign SSD3 = B[15:12];
+    assign SSD2 = B[11:8];
+    assign SSD1 = B[7:4];
+    assign SSD0 = B[3:0];
+
+
+    // need a scan clk for the seven segment display 
+    
+    // 100 MHz / 2^18 = 381.5 cycles/sec ==> frequency of DIV_CLK[17]
+    // 100 MHz / 2^19 = 190.7 cycles/sec ==> frequency of DIV_CLK[18]
+    // 100 MHz / 2^20 =  95.4 cycles/sec ==> frequency of DIV_CLK[19]
+    
+    // 381.5 cycles/sec (2.62 ms per digit) [which means all 4 digits are lit once every 10.5 ms (reciprocal of 95.4 cycles/sec)] works well.
+    
+    //                  --|  |--|  |--|  |--|  |--|  |--|  |--|  |--|  |   
+    //                    |  |  |  |  |  |  |  |  |  |  |  |  |  |  |  | 
+    //  DIV_CLK[17]       |__|  |__|  |__|  |__|  |__|  |__|  |__|  |__|
+    //
+    //               -----|     |-----|     |-----|     |-----|     |
+    //                    |  0  |  1  |  0  |  1  |     |     |     |     
+    //  DIV_CLK[18]       |_____|     |_____|     |_____|     |_____|
+    //
+    //         -----------|           |-----------|           |
+    //                    |  0     0  |  1     1  |           |           
+    //  DIV_CLK[19]       |___________|           |___________|
+    //
+
+    assign ssdscan_clk = DIV_CLK[19:17];
+    assign An0  = !(~(ssdscan_clk[2]) && ~(ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 000
+    assign An1  = !(~(ssdscan_clk[2]) && ~(ssdscan_clk[1]) && (ssdscan_clk[0]));  // when ssdscan_clk = 001
+    assign An2  = !(~(ssdscan_clk[2]) && (ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 010
+    assign An3  = !(~(ssdscan_clk[2]) && (ssdscan_clk[1]) && (ssdscan_clk[0]));  // when ssdscan_clk = 011
+    assign An4  = !((ssdscan_clk[2]) && ~(ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 100
+    assign An5  = !((ssdscan_clk[2]) && ~(ssdscan_clk[1]) && (ssdscan_clk[0]));  // when ssdscan_clk = 101
+    assign An6  = !((ssdscan_clk[2]) && (ssdscan_clk[1]) && ~(ssdscan_clk[0]));  // when ssdscan_clk = 110
+    assign An7  = !((ssdscan_clk[2]) && (ssdscan_clk[1]) && (ssdscan_clk[0]));  // when ssdscan_clk = 111
+    // Turn off another 4 anodes
+    
+    
+    always @ (ssdscan_clk, SSD0, SSD1, SSD2, SSD3, SSD4, SSD5, SSD6, SSD7)
+    begin : SSD_SCAN_OUT
+        case (ssdscan_clk) 
+                  3'b000: SSD = SSD0;
+                  3'b001: SSD = SSD1;
+                  3'b010: SSD = SSD2;
+                  3'b011: SSD = SSD3;
+                  3'b100: SSD = SSD4;
+                  3'b101: SSD = SSD5;
+                  3'b110: SSD = SSD6;
+                  3'b111: SSD = SSD7;
+                  
+        endcase 
+    end
+
+    // Following is Hex-to-SSD conversion
+    always @ (SSD) 
+    begin : HEX_TO_SSD
+        case (SSD) // in this solution file the dot points are made to glow by making Dp = 0
+            //                                                                abcdefg,Dp
+            4'b0000: SSD_CATHODES = 8'b00000011; // 0
+            4'b0001: SSD_CATHODES = 8'b10011111; // 1
+            4'b0010: SSD_CATHODES = 8'b00100101; // 2
+            4'b0011: SSD_CATHODES = 8'b00001101; // 3
+            4'b0100: SSD_CATHODES = 8'b10011001; // 4
+            4'b0101: SSD_CATHODES = 8'b01001001; // 5
+            4'b0110: SSD_CATHODES = 8'b01000001; // 6
+            4'b0111: SSD_CATHODES = 8'b00011111; // 7
+            4'b1000: SSD_CATHODES = 8'b00000001; // 8
+            4'b1001: SSD_CATHODES = 8'b00001001; // 9
+            4'b1010: SSD_CATHODES = 8'b00010001; // A
+            4'b1011: SSD_CATHODES = 8'b11000001; // B
+            4'b1100: SSD_CATHODES = 8'b01100011; // C
+            4'b1101: SSD_CATHODES = 8'b10000101; // D
+            4'b1110: SSD_CATHODES = 8'b01100001; // E
+            4'b1111: SSD_CATHODES = 8'b01110001; // F    
+            default: SSD_CATHODES = 8'bXXXXXXXX; // default is not needed as we covered all cases
+        endcase
+    end 
+    
+    // reg [7:0]  SSD_CATHODES;
+    assign {Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp} = {SSD_CATHODES};
+
 endmodule
