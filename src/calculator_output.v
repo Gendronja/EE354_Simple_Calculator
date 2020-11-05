@@ -15,6 +15,7 @@ module calculator_output(
 	reg block_fill;
 	reg digit;
 	wire [9:0] arrayPos;
+	reg [9:0] CorrPos;
 	wire [3:0] row, col;
 	
 	parameter BLK   = 12'b0000_0000_0000;			// Black text
@@ -48,14 +49,16 @@ module calculator_output(
 		// Select array position based on horizontal position on VGA monitor
 		// Each digit location is 10x10 pixels (8x8 for digit, and 1 pixel on each side for spacing)
 		
+		CorrPos = 15 - arrayPos; 
+		
 		if ((vCount >= AVert) && (vCount <= BVert))
-			digit = A[arrayPos];
+			digit = A[CorrPos];
 			
 		else if ((vCount >= BVert) && (vCount <= CVert))
-			digit = B[arrayPos];
+			digit = B[CorrPos];
 			
 		else if ((vCount >= CVert) && (vCount <= CVert + 10))
-			digit = C[arrayPos];
+			digit = C[CorrPos];
 		
 		else
 			digit = 1'bx;
