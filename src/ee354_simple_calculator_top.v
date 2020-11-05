@@ -127,7 +127,7 @@ module simple_calculator_top (
 
     simple_calculator ee354_simple_calculator
         (.In(Input), .Clk(board_clk), .Reset(Reset), .Done(Done), .SCEN(BtnC_pulse), .ButU(BtnU_pulse), .ButD(BtnD_pulse),
-        .ButL(ButL_pulse), .ButR(BtnR_pulse), .A(A), .B(B), .C(C), .Flag(Flag), .QI(QI), .QGet_A(QGet_A),
+        .ButL(BtnL_pulse), .ButR(BtnR_pulse), .A(A), .B(B), .C(C), .Flag(Flag), .QI(QI), .QGet_A(QGet_A),
         .QGet_B(QGet_B), .QGet_Op(QGet_Op), .QAdd(QAdd), .QSub(QSub), .QMul(QMul), .QDiv(QDiv),
         .QErr(QErr), .QDone(QDone));
 
