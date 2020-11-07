@@ -4,7 +4,6 @@ module calculator_output(
 	input clk,             // Sys clk, display_controller.v handles vga sync
 	input bright,
 	input [9:0] hCount, vCount,
-	input rst,
 	input [15:0] A, B, C,
 	input flag,            // Error or overflow state flag
 	output reg [11:0] rgb
@@ -49,7 +48,7 @@ module calculator_output(
 		// Select array position based on horizontal position on VGA monitor
 		// Each digit location is 10x10 pixels (8x8 for digit, and 1 pixel on each side for spacing)
 		
-		CorrPos = 15 - arrayPos; 
+		CorrPos = 15 - arrayPos; // Display MSB on left and LSB on right
 		
 		if ((vCount >= AVert) && (vCount <= BVert))
 			digit = A[CorrPos];

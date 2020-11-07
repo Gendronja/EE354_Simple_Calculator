@@ -43,9 +43,9 @@ begin: CU_and_DU
 	if(Reset)
 		begin
 		state <= INITIAL;
-		A = 16'bXXXX_XXXX_XXXX_XXXX;
-		B = 16'bXXXX_XXXX_XXXX_XXXX;
-		C = 17'bX_XXXX_XXXX_XXXX_XXXX;
+		A = 16'b0000_0000_0000_0000;
+		B = 16'b0000_0000_0000_0000;
+		C = 17'bX_0000_0000_0000_0000;
 		temp = 16'bXXXX_XXXX_XXXX_XXXX;
 		end
 	else
@@ -114,7 +114,7 @@ begin: CU_and_DU
 
 				//data path
 				C <= A - B;
-				if(A < B) Flag <= 1; //overflow
+				if(A < B) Flag <= 1; // Underflow
 
 				end
 			MUL: //TODO: repetitive addition, need more registers / variables
@@ -126,7 +126,7 @@ begin: CU_and_DU
 				C <= C + B;
 				temp <= temp - 1;
 
-				if(C[16] == 1) Flag <= 1; //overflow
+				if(C[16] == 1) Flag <= 1; // Underflow
 
 				end
 			DIV:
@@ -136,7 +136,7 @@ begin: CU_and_DU
 
 				//data path
 				temp <= temp - B;
-				if(temp > B) C <= C + 1;
+				if(temp >= B) C <= C + 1;
 				if(temp < B) Flag <= 1; //overflow not possible, so this means not divisible
 
 				end

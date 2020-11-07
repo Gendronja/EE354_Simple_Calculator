@@ -12,13 +12,13 @@ module simple_calculator_top (
 		vgaRed, vgaGreen, vgaBlue,
         // Control signals
         BtnL, BtnU, BtnD, BtnR,            // the Left, Up, Down, and the Right buttons         BtnL, BtnR,
-        BtnC,                              // the center button (this is our reset in most of our designs)
+        BtnC, btnCpuReset,                 // the center button (this is our reset in most of our designs)
         Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0, // 16 switches
         Ld13, Ld12, Ld11, Ld10, Ld9, Ld8, Ld7, Ld6, Ld5, Ld4, Ld3, Ld2, Ld1, Ld0, // 8 LEDs
         An3, An2, An1, An0,                // 4 anodes
         An7, An6, An5, An4,                // another 4 anodes (we need to turn these unused SSDs off)
         Ca, Cb, Cc, Cd, Ce, Cf, Cg,        // 7 cathodes
-        Dp,                                // Dot Point Cathode on SSDs
+        Dp                                // Dot Point Cathode on SSDs
     );
      
                                 
@@ -26,7 +26,7 @@ module simple_calculator_top (
     // Clock & Reset I/O
     input       ClkPort;    
     // Project Specific Inputs
-    input       BtnL, BtnU, BtnD, BtnR, BtnC;   
+    input       BtnL, BtnU, BtnD, BtnR, BtnC, btnCpuReset;   
     input       Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0;
     
     
@@ -47,7 +47,7 @@ module simple_calculator_top (
     output  An4, An5, An6, An7; // extra four unused SSDs need to be turned off
     
     /*  LOCAL SIGNALS */
-    wire        Reset = 0;
+    wire        Reset;
     wire        board_clk;
     wire [2:0]  ssdscan_clk;
     wire [15:0] Input;
@@ -97,7 +97,7 @@ module simple_calculator_top (
     end
 
     assign Input = {Sw15, Sw14, Sw13, Sw12, Sw11, Sw10, Sw9, Sw8, Sw7, Sw6, Sw5, Sw4, Sw3, Sw2, Sw1, Sw0};
-    assign Reset = 0;
+    assign Reset = ~btnCpuReset;
 	// Assign VGA values from rgb
 	assign vgaRed = rgb[11 : 8];
 	assign vgaGreen = rgb[7  : 4];
@@ -203,8 +203,8 @@ module simple_calculator_top (
     // Following is Hex-to-SSD conversion
     always @ (SSD) 
     begin : HEX_TO_SSD
-        case (SSD) // in this solution file the dot points are made to glow by making Dp = 0
-            //                                                                abcdefg,Dp
+        case (SSD) //
+           
             4'b0000: SSD_CATHODES = 8'b00000011; // 0
             4'b0001: SSD_CATHODES = 8'b10011111; // 1
             4'b0010: SSD_CATHODES = 8'b00100101; // 2
@@ -225,7 +225,6 @@ module simple_calculator_top (
         endcase
     end 
     
-    // reg [7:0]  SSD_CATHODES;
     assign {Ca, Cb, Cc, Cd, Ce, Cf, Cg, Dp} = {SSD_CATHODES};
 
 endmodule
